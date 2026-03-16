@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7 Continents, 7 Ski Resorts — ArcGIS Story Map HTML</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.30/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.30/"></script>
+
+  <style>
+    :root{
+      --bg:#081321;
+      --bg2:#0f2237;
+      --panel:rgba(8,19,33,.88);
+      --card:rgba(255,255,255,.08);
+      --line:rgba(255,255,255,.14);
+      --text:#f7fbff;
+      --muted:#c7d7e8;
+      --accent:#7ed0ff;
+      --accent2:#dff6ff;
+      --max:1220px;
+      --shadow:0 20px 50px rgba(0,0,0,.28);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(180deg,var(--bg),var(--bg2) 40%,#09111b);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif;scroll-behavior:smooth}
+    img{max-width:100%;display:block}
+    a{color:var(--accent)}
+    .container{width:min(var(--max),92vw);margin:0 auto}
+    .eyebrow{letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-size:.8rem;font-weight:700}
+    h1,h2,h3{line-height:1.05;margin:.2rem 0 1rem}
+    h1{font-size:clamp(2.7rem,7vw,5.8rem)}
+    h2{font-size:clamp(2rem,4vw,3.2rem)}
+    h3{font-size:1.35rem}
+    p{line-height:1.7;color:var(--muted);font-size:1.02rem}
+    .hero{
+      min-height:100vh;
+      position:relative;
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      background:
+        linear-gradient(rgba(4,10,18,.28), rgba(4,10,18,.85)),
+        url("https://images.unsplash.com/photo-1517825738774-7de9363ef735?auto=format&fit=crop&w=1800&q=80") center/cover no-repeat;
+    }
+    .hero::before,.hero::after{
+      content:"";
+      position:absolute;
+      border-radius:50%;
+      filter:blur(14px);
+      opacity:.8;
+    }
+    .hero::before{width:420px;height:420px;background:rgba(126,208,255,.16);top:-80px;left:-70px}
+    .hero::after{width:300px;height:300px;background:rgba(255,255,255,.1);right:4%;bottom:10%}
+    .hero-panel{
+      position:relative;
+      z-index:2;
+      width:min(920px,92vw);
+      padding:34px;
+      border:1px solid var(--line);
+      border-radius:30px;
+      background:linear-gradient(180deg,rgba(9,20,35,.62),rgba(9,20,35,.82));
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .hero-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:28px;align-items:end}
+    .hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+    .stat{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+    .stat strong{display:block;font-size:1.55rem;color:var(--accent2)}
+    .chiprow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+    .chip{
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:10px 14px;
+      color:var(--accent2);
+      font-size:.94rem;
+    }
+    .nav{
+      position:sticky;top:0;z-index:30;
+      background:rgba(7,14,24,.82);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);
+    }
+    .nav-inner{
+      width:min(var(--max),96vw);
+      margin:0 auto;
+      display:flex;justify-content:space-between;align-items:center;
+      gap:18px;padding:12px 0;
+    }
+    .nav-links{display:flex;flex-wrap:wrap;gap:14px}
+    .nav a{text-decoration:none;color:#e7f2ff;font-size:.95rem}
+    section{padding:82px 0}
+    .lead{font-size:1.12rem;color:#e9f3ff}
+    .two-col{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:start}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.05));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:24px;
+      box-shadow:var(--shadow);
+    }
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+    .gallery{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:14px;
+      margin-top:24px;
+    }
+    .gallery figure,.feature-media figure{
+      margin:0;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:#0d1827;
+      box-shadow:var(--shadow);
+    }
+    .gallery img,.feature-media img{
+      width:100%;height:220px;object-fit:cover;
+    }
+    .gallery figcaption,.feature-media figcaption{
+      padding:10px 12px;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+    .map-wrap{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+      margin-top:22px;
+    }
+    .map-card{padding:16px 16px 10px}
+    .map-view{
+      width:100%;
+      height:520px;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background:#0c1624;
+    }
+    .map-toolbar{
+      display:flex;flex-wrap:wrap;gap:10px;margin:0 0 14px;
+    }
+    button.story-btn{
+      appearance:none;border:none;cursor:pointer;
+      background:#12304a;color:#eef8ff;
+      padding:11px 14px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.13);
+      transition:.2s transform,.2s background;
+      font-weight:700;
+    }
+    button.story-btn:hover{transform:translateY(-1px);background:#18415f}
+    .resort-list{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .resort{
+      padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--card)
+    }
+    .resort h3{margin-bottom:.4rem}
+    .callout{
+      border-left:4px solid var(--accent);
+      padding:14px 16px;
+      background:rgba(126,208,255,.08);
+      border-radius:0 16px 16px 0;
+      color:#edf8ff;
+    }
+    .timeline{display:grid;gap:14px}
+    .step{
+      display:grid;grid-template-columns:56px 1fr;gap:16px;align-items:start;
+      padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--card)
+    }
+    .step .num{
+      width:56px;height:56px;border-radius:50%;
+      display:grid;place-items:center;background:#153550;color:#fff;font-weight:800
+    }
+    .video-shell{
+      position:relative;padding-top:56.25%;
+      overflow:hidden;border-radius:22px;border:1px solid var(--line);box-shadow:var(--shadow)
+    }
+    .video-shell iframe{position:absolute;inset:0;width:100%;height:100%}
+    table{
+      width:100%;border-collapse:collapse;margin-top:14px;font-size:.96rem
+    }
+    th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;color:var(--muted)}
+    th{color:#f0f7ff}
+    footer{padding:70px 0 90px;border-top:1px solid var(--line)}
+    .small{font-size:.92rem}
+    @media (max-width: 980px){
+      .hero-grid,.two-col,.grid-3,.grid-2,.gallery,.resort-list{grid-template-columns:1fr}
+      .hero-stats{grid-template-columns:1fr}
+      .nav-inner{align-items:flex-start;flex-direction:column}
+      .gallery img{height:260px}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hero" id="top">
+    <div class="hero-panel">
+      <div class="hero-grid">
+        <div>
+          <div class="eyebrow">ArcGIS Story Map • HTML Edition</div>
+          <h1>7 Continents,<br>7 Ski Resorts</h1>
+          <p class="lead">A globe-spanning alpine journey through seven extraordinary ski destinations, built as a complete story-map style webpage in HTML with ArcGIS-powered interactive maps, images, video, spatial analysis, labeled points of interest, and resort polygons.</p>
+          <div class="chiprow">
+            <div class="chip">10+ content sections</div>
+            <div class="chip">10+ embedded images</div>
+            <div class="chip">1 embedded video</div>
+            <div class="chip">3 interactive ArcGIS maps</div>
+          </div>
+        </div>
+        <div>
+          <div class="stat"><strong>7</strong> continents represented</div>
+          <div class="stat"><strong>21</strong> mapped POIs across the story</div>
+          <div class="stat"><strong>3</strong> themed map views for comparison</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <strong>Story Navigation</strong>
+      <div class="nav-links">
+        <a href="#intro">Intro</a>
+        <a href="#world">World Map</a>
+        <a href="#resorts">Resorts</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#video">Video</a>
+        <a href="#analysis">Spatial Analysis</a>
+        <a href="#maps">Interactive Maps</a>
+        <a href="#compare">Compare</a>
+        <a href="#itinerary">Itinerary</a>
+        <a href="#credits">Credits</a>
+      </div>
+    </div>
+  </nav>
+
+  <section id="intro">
+    <div class="container two-col">
+      <div class="card">
+        <div class="eyebrow">Page 1</div>
+        <h2>The Big Idea</h2>
+        <p>This story imagines a single epic winter route linking one headline ski destination to each continent. Some are world-famous lift-served resorts, while Antarctica is treated as a visionary expedition-style ski base to satisfy the seven-continent concept creatively.</p>
+        <p>The goal is not only to celebrate beautiful mountains, but also to explore the geography behind great skiing: latitude, altitude, prevailing storms, terrain shape, accessibility, surrounding settlement patterns, and seasonality.</p>
+        <div class="callout">This HTML file is structured like a polished web story and can be adapted into ArcGIS StoryMaps content blocks, or published as a standalone showcase page.</div>
+      </div>
+      <div class="card">
+        <div class="eyebrow">Page 2</div>
+        <h2>Featured Continents & Resorts</h2>
+        <table>
+          <thead>
+            <tr><th>Continent</th><th>Resort</th><th>Country / Region</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>North America</td><td>Whistler Blackcomb</td><td>Canada</td></tr>
+            <tr><td>South America</td><td>Valle Nevado</td><td>Chile</td></tr>
+            <tr><td>Europe</td><td>Zermatt</td><td>Switzerland</td></tr>
+            <tr><td>Asia</td><td>Niseko United</td><td>Japan</td></tr>
+            <tr><td>Africa</td><td>Oukaïmeden</td><td>Morocco</td></tr>
+            <tr><td>Australia</td><td>Perisher</td><td>Australia</td></tr>
+            <tr><td>Antarctica</td><td>Aurora Basin Expedition Base</td><td>Concept site</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="world">
+    <div class="container">
+      <div class="eyebrow">Page 3</div>
+      <h2>World Overview</h2>
+      <p class="lead">The first map places all seven resorts on a single globe, showing just how diverse the geography of skiing can be, from coastal powder climates to high desert Andes snowpacks.</p>
+      <div class="map-wrap">
+        <div class="card map-card">
+          <div class="map-toolbar">
+            <button class="story-btn" onclick="goToResort('global')">Reset Globe</button>
+            <button class="story-btn" onclick="goToResort('Whistler Blackcomb')">North America</button>
+            <button class="story-btn" onclick="goToResort('Valle Nevado')">South America</button>
+            <button class="story-btn" onclick="goToResort('Zermatt')">Europe</button>
+            <button class="story-btn" onclick="goToResort('Niseko United')">Asia</button>
+            <button class="story-btn" onclick="goToResort('Oukaïmeden')">Africa</button>
+            <button class="story-btn" onclick="goToResort('Perisher')">Australia</button>
+            <button class="story-btn" onclick="goToResort('Aurora Basin Expedition Base')">Antarctica</button>
+          </div>
+          <div id="mapOverview" class="map-view"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="resorts">
+    <div class="container">
+      <div class="eyebrow">Page 4</div>
+      <h2>The Seven Resorts</h2>
+      <div class="resort-list">
+        <div class="resort"><h3>Whistler Blackcomb — North America</h3><p>Large-scale terrain, village energy, and maritime snowfall combine into one of the continent’s most iconic all-round mountain experiences.</p></div>
+        <div class="resort"><h3>Valle Nevado — South America</h3><p>High-Andes positioning above Santiago creates dramatic scenery, thin air, and expansive terrain with big-mountain character.</p></div>
+        <div class="resort"><h3>Zermatt — Europe</h3><p>Historic alpine village, Matterhorn views, and cross-border skiing give Zermatt unmatched visual identity and prestige.</p></div>
+        <div class="resort"><h3>Niseko United — Asia</h3><p>Globally famous for deep, dry powder generated by cold Siberian air crossing the Sea of Japan.</p></div>
+        <div class="resort"><h3>Oukaïmeden — Africa</h3><p>A rare African ski landscape in the High Atlas, where altitude enables winter snow above a markedly different surrounding climate zone.</p></div>
+        <div class="resort"><h3>Perisher — Australia</h3><p>Australia’s biggest snow resort network, with broad terrain and a southern-hemisphere season that complements northern winters.</p></div>
+        <div class="resort"><h3>Aurora Basin Expedition Base — Antarctica</h3><p>A creative concept resort: remote, wind-shaped, scientifically themed, and built around expedition-style skiing rather than conventional mass tourism.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gallery">
+    <div class="container">
+      <div class="eyebrow">Page 5</div>
+      <h2>Visual Gallery</h2>
+      <p>These images give the story cinematic visual depth. They can remain as-is for a web demo, or be swapped with teacher-approved media assets for final submission.</p>
+      <div class="gallery">
+        <figure><img src="https://images.unsplash.com/photo-1489440543286-a69330151c0b?auto=format&fit=crop&w=900&q=80" alt="Snowy mountain sunrise"><figcaption>Alpine sunrise atmosphere</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=900&q=80" alt="Skier on slope"><figcaption>Steep slope action</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1517581177682-a085bb7ffb15?auto=format&fit=crop&w=900&q=80" alt="Mountain village"><figcaption>Village and resort culture</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&w=900&q=80" alt="Snowy peaks"><figcaption>High alpine relief</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1455156218388-5e61b526818b?auto=format&fit=crop&w=900&q=80" alt="Ski lift"><figcaption>Lift-accessed terrain</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1482192505345-5655af888cc4?auto=format&fit=crop&w=900&q=80" alt="Snow forest"><figcaption>Tree skiing mood</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1548777127-d1b8c84ba1ff?auto=format&fit=crop&w=900&q=80" alt="Mountain road"><figcaption>Mountain access routes</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1516912481808-3406841bd33c?auto=format&fit=crop&w=900&q=80" alt="Cable car"><figcaption>Vertical transport systems</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1516542076529-1ea3854896f2?auto=format&fit=crop&w=900&q=80" alt="Powder skiing"><figcaption>Powder conditions</figcaption></figure>
+        <figure><img src="https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=900&q=80" alt="Glacial scenery"><figcaption>Glacial and polar environments</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="video">
+    <div class="container two-col">
+      <div>
+        <div class="eyebrow">Page 6</div>
+        <h2>Motion & Atmosphere</h2>
+        <p>An embedded video satisfies the multimedia requirement and helps the viewer feel the pace, scale, and movement of skiing terrain more vividly than still images alone.</p>
+        <p>This can be replaced with your own edited clip, narrated reel, or a class-approved YouTube/Vimeo source.</p>
+        <div class="callout">Suggested classroom use: pause the video and ask how weather, slope angle, and tree cover might differ between these mountain regions.</div>
+      </div>
+      <div class="video-shell">
+        <iframe src="https://www.youtube.com/embed/7pP3J9r1E7c?si=storymapdemo" title="Skiing video" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section id="analysis">
+    <div class="container">
+      <div class="eyebrow">Page 7</div>
+      <h2>Spatial Analysis of Location Factors</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>1. Latitude & Climate</h3>
+          <p>Higher latitudes often favor colder, more reliable snow climates, yet altitude can compensate closer to the equator. This explains why Morocco can host skiing in Africa and why Andes and Atlas resorts depend heavily on elevation.</p>
+        </div>
+        <div class="card">
+          <h3>2. Altitude & Snow Preservation</h3>
+          <p>Resorts with higher base and summit elevations generally preserve snow longer, support steeper alpine zones, and reduce rain-on-snow events. Zermatt and Valle Nevado benefit strongly from elevation.</p>
+        </div>
+        <div class="card">
+          <h3>3. Accessibility & Tourism</h3>
+          <p>A great mountain alone is not enough. Airports, road corridors, villages, lodging density, and safety infrastructure all influence whether a ski area becomes globally competitive.</p>
+        </div>
+      </div>
+      <div class="grid-3" style="margin-top:18px">
+        <div class="card">
+          <h3>4. Relief & Terrain Variety</h3>
+          <p>Strong vertical relief supports longer runs, while varied slope aspect can spread sunlight and preserve snow in different weather conditions.</p>
+        </div>
+        <div class="card">
+          <h3>5. Culture & Identity</h3>
+          <p>Place branding matters. The Matterhorn silhouette, Niseko powder reputation, and Whistler village experience add narrative value beyond terrain statistics alone.</p>
+        </div>
+        <div class="card">
+          <h3>6. Environmental Risk</h3>
+          <p>Climate volatility, wildfire smoke, thaw cycles, glacial retreat, and ecosystem pressure increasingly shape the future viability of ski tourism worldwide.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="maps">
+    <div class="container">
+      <div class="eyebrow">Page 8</div>
+      <h2>Interactive Map 2: Snow Reliability & Altitude</h2>
+      <p class="lead">This map highlights a second analytical layer: how elevation and estimated snow reliability shape the character of each destination.</p>
+      <div class="card map-card">
+        <div class="map-toolbar">
+          <button class="story-btn" onclick="filterReliability('all')">All Resorts</button>
+          <button class="story-btn" onclick="filterReliability('Very High')">Very High Reliability</button>
+          <button class="story-btn" onclick="filterReliability('High')">High Reliability</button>
+          <button class="story-btn" onclick="filterReliability('Moderate')">Moderate Reliability</button>
+          <button class="story-btn" onclick="filterReliability('Experimental')">Experimental</button>
+        </div>
+        <div id="mapAnalysis" class="map-view"></div>
+      </div>
+
+      <div class="eyebrow" style="margin-top:34px">Page 9</div>
+      <h2>Interactive Map 3: Access, POIs & Resort Polygons</h2>
+      <p class="lead">The third map focuses on local context. Each resort includes labeled POIs and an approximate polygon showing its notional ski zone footprint.</p>
+      <div class="card map-card">
+        <div class="map-toolbar">
+          <button class="story-btn" onclick="focusLocal('Whistler Blackcomb')">Whistler Local View</button>
+          <button class="story-btn" onclick="focusLocal('Valle Nevado')">Valle Nevado Local View</button>
+          <button class="story-btn" onclick="focusLocal('Zermatt')">Zermatt Local View</button>
+          <button class="story-btn" onclick="focusLocal('Niseko United')">Niseko Local View</button>
+          <button class="story-btn" onclick="focusLocal('Oukaïmeden')">Oukaïmeden Local View</button>
+          <button class="story-btn" onclick="focusLocal('Perisher')">Perisher Local View</button>
+          <button class="story-btn" onclick="focusLocal('Aurora Basin Expedition Base')">Aurora Basin Local View</button>
+        </div>
+        <div id="mapLocal" class="map-view"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="container two-col">
+      <div class="card">
+        <div class="eyebrow">Page 10</div>
+        <h2>Comparative Ranking</h2>
+        <table>
+          <thead>
+            <tr><th>Resort</th><th>Snow</th><th>Access</th><th>Scenic Drama</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Niseko United</td><td>Excellent</td><td>Good</td><td>High</td></tr>
+            <tr><td>Zermatt</td><td>Very Good</td><td>Very Good</td><td>Exceptional</td></tr>
+            <tr><td>Whistler Blackcomb</td><td>Very Good</td><td>Excellent</td><td>High</td></tr>
+            <tr><td>Valle Nevado</td><td>High</td><td>Moderate</td><td>Exceptional</td></tr>
+            <tr><td>Perisher</td><td>Moderate</td><td>Good</td><td>Moderate</td></tr>
+            <tr><td>Oukaïmeden</td><td>Moderate</td><td>Moderate</td><td>High</td></tr>
+            <tr><td>Aurora Basin Expedition Base</td><td>Unknown / Extreme</td><td>Very Low</td><td>Exceptional</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>What Makes a “Perfect” Ski Resort?</h2>
+        <p>A globally compelling ski destination usually balances four ingredients: reliable snow, memorable scenery, terrain diversity, and realistic access. The most successful resorts also build a strong sense of place through architecture, food, events, and identity.</p>
+        <p>That is why this story includes both pure geographic analysis and human-centered tourism factors. A map tells us where a resort sits, but the story explains why people remember it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="itinerary">
+    <div class="container">
+      <div class="eyebrow">Page 11</div>
+      <h2>Dream Round-the-World Ski Itinerary</h2>
+      <div class="timeline">
+        <div class="step"><div class="num">1</div><div><h3>Start in Canada</h3><p>Begin in Whistler for resort scale and polished visitor infrastructure.</p></div></div>
+        <div class="step"><div class="num">2</div><div><h3>Shift to the Andes</h3><p>Chase southern-hemisphere contrast and high-elevation Chilean terrain at Valle Nevado.</p></div></div>
+        <div class="step"><div class="num">3</div><div><h3>Cross to Europe</h3><p>Enjoy iconic alpine scenery and village character in Zermatt.</p></div></div>
+        <div class="step"><div class="num">4</div><div><h3>Powder in Japan</h3><p>Niseko adds a completely different snow climate and forested atmosphere.</p></div></div>
+        <div class="step"><div class="num">5</div><div><h3>Rare African Skiing</h3><p>Oukaïmeden proves that skiing geography can surprise us.</p></div></div>
+        <div class="step"><div class="num">6</div><div><h3>Australia Finale</h3><p>Perisher extends the global journey into another southern winter culture.</p></div></div>
+        <div class="step"><div class="num">7</div><div><h3>Polar Epilogue</h3><p>Finish with the imaginative expedition concept in Antarctica, where skiing becomes exploration.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer id="credits">
+    <div class="container">
+      <div class="eyebrow">Page 12</div>
+      <h2>Implementation Notes</h2>
+      <p>This HTML uses the ArcGIS Maps SDK for JavaScript and includes three interactive maps, labeled resort points, multiple POIs, and approximate resort polygons. Image and video URLs can be replaced with your own sources. Text is already scaffolded to meet a story-map style project requirement.</p>
+      <p class="small">Tip for submission: if your teacher wants an actual ArcGIS StoryMaps build instead of a standalone webpage, copy each section into ArcGIS StoryMaps blocks and embed the three maps as web app content or exported web maps.</p>
+    </div>
+  </footer>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/Graphic",
+      "esri/layers/GraphicsLayer",
+      "esri/geometry/Polygon",
+      "esri/geometry/Point",
+      "esri/symbols/SimpleMarkerSymbol",
+      "esri/symbols/SimpleFillSymbol",
+      "esri/symbols/TextSymbol",
+      "esri/PopupTemplate"
+    ], function(Map, MapView, Graphic, GraphicsLayer, Polygon, Point, SimpleMarkerSymbol, SimpleFillSymbol, TextSymbol, PopupTemplate) {
+
+      const resorts = [
+        {
+          name:"Whistler Blackcomb", continent:"North America", country:"Canada",
+          coords:[-122.9574,50.1163], altitude:2218, reliability:"High", access:"Excellent",
+          desc:"Coastal mountain mega-resort with village core and major lift infrastructure.",
+          poi:[
+            {name:"Whistler Village", coords:[-122.9577,50.1169]},
+            {name:"Peak 2 Peak Gondola", coords:[-122.948,50.091]},
+            {name:"Blackcomb Base", coords:[-122.9485,50.1141]}
+          ],
+          polygon:[[-123.03,50.06],[-122.90,50.06],[-122.87,50.16],[-122.98,50.21],[-123.05,50.15],[-123.03,50.06]],
+          zoom:10
+        },
+        {
+          name:"Valle Nevado", continent:"South America", country:"Chile",
+          coords:[-70.2537,-33.3498], altitude:3670, reliability:"High", access:"Moderate",
+          desc:"High-elevation Andean resort above Santiago with broad alpine terrain.",
+          poi:[
+            {name:"Base Area", coords:[-70.2537,-33.3498]},
+            {name:"Santiago Access Route", coords:[-70.336,-33.37]},
+            {name:"El Colorado Link Zone", coords:[-70.286,-33.350]}
+          ],
+          polygon:[[-70.32,-33.39],[-70.21,-33.39],[-70.19,-33.30],[-70.29,-33.28],[-70.34,-33.33],[-70.32,-33.39]],
+          zoom:11
+        },
+        {
+          name:"Zermatt", continent:"Europe", country:"Switzerland",
+          coords:[7.7491,46.0207], altitude:3883, reliability:"Very High", access:"Very Good",
+          desc:"Classic alpine resort below the Matterhorn with extensive high-altitude terrain.",
+          poi:[
+            {name:"Zermatt Village", coords:[7.7491,46.0207]},
+            {name:"Matterhorn Glacier Paradise", coords:[7.728,45.938]},
+            {name:"Sunnegga Funicular", coords:[7.782,46.025]}
+          ],
+          polygon:[[7.63,45.95],[7.84,45.95],[7.87,46.08],[7.74,46.12],[7.61,46.05],[7.63,45.95]],
+          zoom:11
+        },
+        {
+          name:"Niseko United", continent:"Asia", country:"Japan",
+          coords:[140.6874,42.864], altitude:1308, reliability:"Very High", access:"Good",
+          desc:"Legendary powder destination shaped by cold continental air and maritime moisture.",
+          poi:[
+            {name:"Grand Hirafu", coords:[140.704,42.859]},
+            {name:"Annupuri", coords:[140.655,42.857]},
+            {name:"Kutchan Station", coords:[140.759,42.901]}
+          ],
+          polygon:[[140.61,42.82],[140.76,42.82],[140.79,42.90],[140.67,42.94],[140.60,42.88],[140.61,42.82]],
+          zoom:11
+        },
+        {
+          name:"Oukaïmeden", continent:"Africa", country:"Morocco",
+          coords:[-7.8601,31.2068], altitude:3200, reliability:"Moderate", access:"Moderate",
+          desc:"A rare North African ski landscape in the High Atlas Mountains.",
+          poi:[
+            {name:"Resort Base", coords:[-7.8601,31.2068]},
+            {name:"Atlas Pass Road", coords:[-7.91,31.18]},
+            {name:"Nearby Mountain Hamlet", coords:[-7.84,31.23]}
+          ],
+          polygon:[[-7.95,31.15],[-7.80,31.15],[-7.77,31.24],[-7.87,31.28],[-7.97,31.22],[-7.95,31.15]],
+          zoom:11
+        },
+        {
+          name:"Perisher", continent:"Australia", country:"Australia",
+          coords:[148.4089,-36.405], altitude:2054, reliability:"Moderate", access:"Good",
+          desc:"Australia’s largest integrated snow area with broad lift-linked sectors.",
+          poi:[
+            {name:"Perisher Centre", coords:[148.4089,-36.405]},
+            {name:"Blue Cow", coords:[148.387,-36.411]},
+            {name:"Jindabyne Access Hub", coords:[148.615,-36.414]}
+          ],
+          polygon:[[148.31,-36.46],[148.48,-36.46],[148.52,-36.36],[148.38,-36.31],[148.29,-36.38],[148.31,-36.46]],
+          zoom:11
+        },
+        {
+          name:"Aurora Basin Expedition Base", continent:"Antarctica", country:"Antarctica (Concept)",
+          coords:[-45.0,-79.5], altitude:1600, reliability:"Experimental", access:"Very Low",
+          desc:"Conceptual expedition ski base representing Antarctica in this imaginative story.",
+          poi:[
+            {name:"Polar Base Camp", coords:[-45.0,-79.5]},
+            {name:"Blue Ice Run", coords:[-44.6,-79.42]},
+            {name:"Research Ridge", coords:[-45.3,-79.55]}
+          ],
+          polygon:[[-46.2,-79.7],[-43.8,-79.7],[-43.5,-79.3],[-45.0,-79.1],[-46.4,-79.35],[-46.2,-79.7]],
+          zoom:7
+        }
+      ];
+
+      function markerSymbolByReliability(rel){
+        const colors = {
+          "Very High":[126,208,255,1],
+          "High":[90,180,255,1],
+          "Moderate":[255,196,104,1],
+          "Experimental":[255,120,120,1]
+        };
+        return new SimpleMarkerSymbol({
+          style:"circle",
+          color:colors[rel] || [255,255,255,1],
+          size:14,
+          outline:{color:[8,19,33,1], width:1.5}
+        });
+      }
+
+      function fillSymbolByReliability(rel){
+        const colors = {
+          "Very High":[126,208,255,.16],
+          "High":[90,180,255,.16],
+          "Moderate":[255,196,104,.16],
+          "Experimental":[255,120,120,.18]
+        };
+        const outlines = {
+          "Very High":[126,208,255,.9],
+          "High":[90,180,255,.9],
+          "Moderate":[255,196,104,.9],
+          "Experimental":[255,120,120,.9]
+        };
+        return new SimpleFillSymbol({
+          color: colors[rel] || [255,255,255,.12],
+          outline: { color: outlines[rel] || [255,255,255,.8], width: 2 }
+        });
+      }
+
+      const popupTemplate = new PopupTemplate({
+        title: "{name}",
+        content: `
+          <b>Continent:</b> {continent}<br>
+          <b>Country/Region:</b> {country}<br>
+          <b>Approx. summit / high point:</b> {altitude} m<br>
+          <b>Snow reliability:</b> {reliability}<br>
+          <b>Access:</b> {access}<br><br>
+          {desc}
+        `
+      });
+
+      const map1 = new Map({ basemap: "satellite" });
+      const map2 = new Map({ basemap: "topo-vector" });
+      const map3 = new Map({ basemap: "terrain" });
+
+      const view1 = new MapView({
+        container: "mapOverview",
+        map: map1,
+        center: [12, 15],
+        zoom: 2,
+        constraints: { snapToZoom: false }
+      });
+
+      const view2 = new MapView({
+        container: "mapAnalysis",
+        map: map2,
+        center: [12, 15],
+        zoom: 2,
+        constraints: { snapToZoom: false }
+      });
+
+      const view3 = new MapView({
+        container: "mapLocal",
+        map: map3,
+        center: [12, 20],
+        zoom: 2,
+        constraints: { snapToZoom: false }
+      });
+
+      const overviewLayer = new GraphicsLayer();
+      const analysisLayer = new GraphicsLayer();
+      const localPolyLayer = new GraphicsLayer();
+      const localPointLayer = new GraphicsLayer();
+      map1.add(overviewLayer);
+      map2.add(analysisLayer);
+      map3.addMany([localPolyLayer, localPointLayer]);
+
+      resorts.forEach(r => {
+        const point = new Point({ longitude: r.coords[0], latitude: r.coords[1] });
+
+        const g1 = new Graphic({
+          geometry: point,
+          symbol: markerSymbolByReliability(r.reliability),
+          attributes: r,
+          popupTemplate
+        });
+        overviewLayer.add(g1);
+
+        const label1 = new Graphic({
+          geometry: point,
+          symbol: new TextSymbol({
+            text: r.name,
+            color: "#f5fbff",
+            yoffset: -18,
+            haloColor: "#0b1320",
+            haloSize: 1.5,
+            font: { size: 10, family: "Arial", weight: "bold" }
+          })
+        });
+        overviewLayer.add(label1);
+
+        const g2 = new Graphic({
+          geometry: point,
+          symbol: markerSymbolByReliability(r.reliability),
+          attributes: r,
+          popupTemplate
+        });
+        analysisLayer.add(g2);
+
+        const label2 = new Graphic({
+          geometry: point,
+          symbol: new TextSymbol({
+            text: `${r.name} • ${r.altitude}m`,
+            color: "#173349",
+            yoffset: -18,
+            haloColor: "#ffffff",
+            haloSize: 1.8,
+            font: { size: 10, family: "Arial", weight: "bold" }
+          })
+        });
+        analysisLayer.add(label2);
+
+        const polygon = new Polygon({
+          rings: [r.polygon]
+        });
+
+        const polyGraphic = new Graphic({
+          geometry: polygon,
+          symbol: fillSymbolByReliability(r.reliability),
+          attributes: r,
+          popupTemplate
+        });
+        localPolyLayer.add(polyGraphic);
+
+        const resortMarker = new Graphic({
+          geometry: point,
+          symbol: markerSymbolByReliability(r.reliability),
+          attributes: r,
+          popupTemplate
+        });
+        localPointLayer.add(resortMarker);
+
+        const resortLabel = new Graphic({
+          geometry: point,
+          symbol: new TextSymbol({
+            text: r.name,
+            color: "#ffffff",
+            yoffset: -16,
+            haloColor: "#102030",
+            haloSize: 1.5,
+            font: { size: 10, family: "Arial", weight: "bold" }
+          })
+        });
+        localPointLayer.add(resortLabel);
+
+        r.poi.forEach(p => {
+          const poiPt = new Point({ longitude: p.coords[0], latitude: p.coords[1] });
+          localPointLayer.add(new Graphic({
+            geometry: poiPt,
+            attributes: { name: p.name, resort: r.name },
+            symbol: new SimpleMarkerSymbol({
+              style:"diamond",
+              color:[255,255,255,.95],
+              size:10,
+              outline:{color:[8,19,33,1], width:1.2}
+            }),
+            popupTemplate: {
+              title: "{name}",
+              content: `<b>Associated resort:</b> ${r.name}`
+            }
+          }));
+          localPointLayer.add(new Graphic({
+            geometry: poiPt,
+            symbol: new TextSymbol({
+              text: p.name,
+              color: "#f5fbff",
+              yoffset: -14,
+              haloColor: "#0c1726",
+              haloSize: 1.2,
+              font: { size: 9, family: "Arial" }
+            })
+          }));
+        });
+      });
+
+      window.goToResort = function(name){
+        if(name === "global"){
+          view1.goTo({ center:[12,15], zoom:2 });
+          return;
+        }
+        const r = resorts.find(x => x.name === name);
+        if(!r) return;
+        view1.goTo({ center:r.coords, zoom:r.zoom || 8 });
+      };
+
+      window.filterReliability = function(level){
+        analysisLayer.graphics.forEach(g => {
+          if(!g.attributes || !g.attributes.reliability){
+            g.visible = true;
+            return;
+          }
+          g.visible = (level === "all" || g.attributes.reliability === level);
+        });
+        view2.goTo({ center:[12,15], zoom:2 });
+      };
+
+      window.focusLocal = function(name){
+        const r = resorts.find(x => x.name === name);
+        if(!r) return;
+        view3.goTo({ center:r.coords, zoom:r.zoom || 10 });
+        localPolyLayer.graphics.forEach(g => g.visible = g.attributes && g.attributes.name === name);
+        localPointLayer.graphics.forEach(g => {
+          if(!g.attributes){
+            g.visible = true;
+            return;
+          }
+          g.visible = (g.attributes.name === name || g.attributes.resort === name);
+        });
+      };
+
+      // Initial state
+      focusLocal("Whistler Blackcomb");
+    });
+  </script>
+</body>
+</html>
